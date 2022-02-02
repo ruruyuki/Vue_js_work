@@ -5,49 +5,98 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
 </head>
 <body>
-    <style>
-        .red {
-            color: red
-        }
-        .green {
-            color: green;
-        }
-        .blue {
-            color: blue;
-        }
-    </style>
-    <div id="app">
-        {{ number }}
-        <!-- v-on:click ディレクティブ(指令) @とも書ける -->
-        <button v-on:click="countUp">カウントアップ1</button>
-        <button @click="countUp">カウントアップ2</button>
-        <div v-if="number">条件次第で表示</div>
-        <ul>
-            <li v-for="item in items">{{ item }}</li>
-        </ul>
-        <!-- htmlとVueのデータを連動させるにはv-bind:属性を利用する。v-bindは省略可能 -->
-        <div v-bind:class="color">カラー</div>
-        <div :class="color">カラー</div>
-        <!-- v-model は双方向バインディングを可能とする-->
-        <input type="text" v-model="color">
-    </div>
-    <script>
-        new Vue({
-            el:"#app",
-            data:{
-                number:0,
-                items:[1,2,3],
-                color:'双方向バインディング(red, blue, green)'
-            },
-            methods: {
-                countUp:function(){
-                    this.number = this.number + 1
+    <div id="app" class="container">
+        <div class="title">   
+            <h1>Typing Game</h1>
+            <div class="marker"></div>
+        </div>
+        <!-- mb-20 はマージンボトム20の略 -->
+        <button v-if="startFlg!=true" class="startButton mb-20" @click="gameStart">START</button>
+        <div v-if="startFlg">
+            <div class="question mb-20">{{ current_question }}</div>
+            <div v-if="current_question_counts == question_counts" class="clear">Clear!</div>
+            <div class="typeFormWrapper mb-20">
+                <!-- v-model は textboxに入力された値を変数に渡すもの -->
+                <input id="typeForm" v-model="typeBox" type="text" class="typeForm">
+            </div>
+            <!-- .class名 と記載してtabボタンを押すと、divタグが作成できる -->
+            <div class="gaugeWrapper mb-20">
+                <!-- Vueでstyleを変更する場合はv-bindを使用する -->
+                <div v-bind:style="styleObject" class="gauge"></div>
+            </div>
+            <div>{{ current_question_counts }}/{{ question_counts }}</div>
+        </div>
+        <script>
+            new Vue({
+                el: "#app",
+                data:{
+                    startFlg:"",
+                    current_question:"",
+                    questions:[
+                        'apple',
+                        'banana',
+                        'chocolate',
+                        'donut',
+                        'espresso'
+                    ],
+                    typeBox:"",
+                    current_question_counts:0,
+                    question_counts:0
+                },
+                // 算出プロパティ、画面で入力した値が変化するごとに変数がリアルタイムに変化する
+                // 正答数を表すゲージに使用
+                computed:{
+                    styleObject:function(){
+                        width = 20 * this.current_question_counts + "%"
+                        if(this.current_question_counts == 5){
+                            color = "#03a9f4"
+                        }else{
+                            color = "orange"
+                        }
+                        return{
+                            'width': width,
+                            'background-color': color
+                        }
+                    }
+                },
+                methods:{
+                    gameStart:function(){
+                        this.startFlg = true;
+                        //$nextTickはカーソルの場所を制御する
+                        this.$nextTick(function(){
+                            document.getElementById('typeForm').focus()
+                        })
+                    }
+                },
+                // mounted　描画された時点で実行される関数
+                mounted:function(){
+                    this.current_question = this.questions[0]
+                    // 配列.length で配列の個数を取得する
+                    this.question_counts = this.questions.length
+                },
+                // typeBoxの値が変わる度に処理を実行する
+                watch:{
+                    // typeBoxに格納された値はeに格納される
+                    typeBox:function(e){
+                        if(e == this.current_question){
+                            // questionsの配列の0番目を消す
+                            this.questions.splice(0,1)
+                            // 再び配列の0番目を取得する
+                            this.current_question = this.questions[0]
+                            //処理が終わったらtypeBoxの値を空にする
+                            this.typeBox = ""
+                            //正解した問題数を記録する
+                            this.current_question_counts = this.current_question_counts + 1
+                        }
+                    }
                 }
-            }
-        })
-    </script>
+
+            })
+        </script>
+    </div>
 </body>
 </html>
